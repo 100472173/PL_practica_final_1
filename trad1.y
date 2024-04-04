@@ -35,7 +35,8 @@ typedef struct s_attr {
 %token STRING
 %token MAIN          // identifica el comienzo del proc. main
 %token WHILE         // identifica el bucle main
-
+%token PUTS
+%token PRINTF
 
 
 %right '='                    // es la ultima operacion que se debe realizar
@@ -45,36 +46,56 @@ typedef struct s_attr {
 
 %%                            // Seccion 3 Gramatica - Semantico
 
-axioma:       sentencia ';'              { printf ("%s\n", $1.code) ; }
-                r_expr                   { ; }
+axioma:       decl_variables def_funciones             { printf ("\n%s%s\n(main) ;\n\n", $1.code, $2.code) ; }
+              r_expr                                   { ; }
             ;
 
-r_expr:                                  { ; }
-            |   axioma                   { ; }
+r_expr:        axioma                 { ; }
+            |                         { ; }
+
             ;
+
+decl_variables:      sentencia_variable ';' decl_variables    { sprintf (temp, "%s\n%s)", $1.code, $3.code) ;
+                                                                $$.code = gen_code (temp) ; }
+                  |  sentencia_variable ';'                   { sprintf (temp, "%s\n", $1.code) ;
+                                                                $$.code = gen_code (temp) ; }
+                ;
+
+sentencia_variable:    INTEGER IDENTIF                              { sprintf (temp, "(setq %s 0)", $2.code) ;
+                                                                      $$.code = gen_code (temp) ; }
+                     | INTEGER IDENTIF '=' NUMBER lista_decl_var    { sprintf (temp, "(setq %s %d) %s", $2.code, $4.value, $5.code) ;
+                                                                      $$.code = gen_code (temp) ; }
+
+lista_decl_var: ',' IDENTIF '=' NUMBER lista_decl_var            { sprintf (temp, "(setq %s %d) %s", $2.code, $4.value, $5.code) ;
+                                                                   $$.code = gen_code (temp) ; }
+           |                                                     { strcpy(temp, "") ;
+                                                                   $$.code = gen_code (temp) ; }
+           ;
+
+def_funciones:  MAIN '(' ')' '{' cuerpo_funcion '}'     { sprintf (temp, "(defun main ()\n%s)", $5.code) ;
+                                                          $$.code = gen_code (temp) ; }
+
+cuerpo_funcion:     sentencia ';' cuerpo_funcion        { sprintf (temp, "%s\n%s", $1.code, $3.code) ;
+                                                          $$.code = gen_code (temp) ; }
+                 |  sentencia ';'                       { sprintf (temp, "%s\n", $1.code) ;
+                                                          $$.code = gen_code (temp) ; }
 
 sentencia:    IDENTIF '=' expresion                        { sprintf (temp, "(setq %s %s)", $1.code, $3.code) ;
                                                              $$.code = gen_code (temp) ; }
-            | '@' expresion                                { sprintf (temp, "(print %s)", $2.code) ;
-                                                             $$.code = gen_code (temp) ; }
-            | '@' '(' expresion ',' lista_expresiones ')'  { sprintf (temp, "(print %s) %s", $3.code, $5.code) ;
-                                                             $$.code = gen_code (temp) ; }
-            | INTEGER IDENTIF                              { sprintf (temp, "(setq %s 0)", $2.code) ;
-                                                             $$.code = gen_code (temp) ; }
-            | INTEGER IDENTIF '=' NUMBER lista_decl        { sprintf (temp, "(setq %s %d) %s", $2.code, $4.value, $5.code) ;
-                                                             $$.code = gen_code (temp) ; }
+            | PRINTF '(' STRING ',' lista_expresiones ')'  {$$ = $5;}
+            | PUTS '(' STRING ')'                           { sprintf (temp, "(print \"%s\")", $3.code) ;
+                                                              $$.code = gen_code (temp) ; }
             ;
 
-lista_decl: ',' IDENTIF '=' NUMBER lista_decl              { sprintf (temp, "(setq %s %d) %s", $2.code, $4.value, $5.code) ;
-                                                             $$.code = gen_code (temp) ; }
-           |                                               { strcpy(temp, "") ;
-                                                             $$.code = gen_code (temp) ; }
-           ;
+lista_expresiones:     expresion ',' lista_expresiones        {sprintf (temp, "(prin1 %s) %s", $1.code, $3.code);
+                                                               $$.code = gen_code (temp);}
+                    |  expresion                              {sprintf (temp, "(prin1 %s)", $1.code) ;
+                                                               $$.code = gen_code(temp) ;}
+                    |  STRING                                 {sprintf (temp, "(prin1 \"%s\")", $1.code) ;
+                                                               $$.code = gen_code(temp) ;}
 
-lista_expresiones:  expresion ',' lista_expresiones        {sprintf (temp, "(print %s) %s", $1.code, $3.code);
-                                                            $$.code = gen_code (temp);}
-                    |  expresion                           {sprintf (temp, "(print %s)", $1.code) ;
-                                                            $$.code = gen_code(temp) ;}
+                    |  STRING ',' lista_expresiones           {sprintf (temp, "(prin1 \"%s\") %s", $1.code, $3.code);
+                                                               $$.code = gen_code (temp);}
             ;
 
 expresion:      termino                  { $$ = $1 ; }
@@ -157,6 +178,8 @@ typedef struct s_keyword { // para las palabras reservadas de C
 t_keyword keywords [] = { // define las palabras reservadas y los
     "main",        MAIN,           // y los token asociados
     "int",         INTEGER,
+    "puts",        PUTS,
+    "printf",      PRINTF,
     NULL,          0               // para marcar el fin de la tabla
 } ;
 
