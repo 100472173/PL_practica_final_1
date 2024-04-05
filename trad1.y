@@ -55,10 +55,10 @@ r_expr:        axioma                 { ; }
 
             ;
 
-decl_variables:      sentencia_variable ';' decl_variables    { sprintf (temp, "%s\n%s)", $1.code, $3.code) ;
+decl_variables:      sentencia_variable ';' decl_variables    { sprintf (temp, "%s\n%s", $1.code, $3.code) ;
                                                                 $$.code = gen_code (temp) ; }
-                  |  sentencia_variable ';'                   { sprintf (temp, "%s\n", $1.code) ;
-                                                                $$.code = gen_code (temp) ; }
+                  |                                           { strcpy(temp, "") ;
+                                                                $$.code = gen_code (temp) ;}
                 ;
 
 sentencia_variable:    INTEGER IDENTIF                              { sprintf (temp, "(setq %s 0)", $2.code) ;
@@ -74,11 +74,18 @@ lista_decl_var: ',' IDENTIF '=' NUMBER lista_decl_var            { sprintf (temp
 
 def_funciones:  MAIN '(' ')' '{' cuerpo_funcion '}'     { sprintf (temp, "(defun main ()\n%s)", $5.code) ;
                                                           $$.code = gen_code (temp) ; }
+               | sentencia_funcion def_funciones        {sprintf (temp, "%s\n%s", $1.code, $2.code) ;
+                                                          $$.code = gen_code (temp) ;}
+               ;
+
+sentencia_funcion: IDENTIF '(' ')' '{' cuerpo_funcion '}'    {sprintf (temp, "(defun %s ()\n%s)", $1.code, $5.code) ;
+                                                              $$.code = gen_code (temp) ; }
 
 cuerpo_funcion:     sentencia ';' cuerpo_funcion        { sprintf (temp, "%s\n%s", $1.code, $3.code) ;
                                                           $$.code = gen_code (temp) ; }
-                 |  sentencia ';'                       { sprintf (temp, "%s\n", $1.code) ;
-                                                          $$.code = gen_code (temp) ; }
+                    |                                   { strcpy(temp, "") ;
+                                                         $$.code = gen_code (temp) ; }
+                 ;
 
 sentencia:    IDENTIF '=' expresion                        { sprintf (temp, "(setq %s %s)", $1.code, $3.code) ;
                                                              $$.code = gen_code (temp) ; }
