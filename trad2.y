@@ -42,6 +42,7 @@ typedef struct s_attr {
 %token PRINTF
 %token IF
 %token ELSE
+%token FOR
 
 %right '='                    // es la ultima operacion que se debe realizar
 %left '+' '-'                 // menor orden de precedencia
@@ -91,7 +92,9 @@ cuerpo_funcion:     sentencia  cuerpo_funcion        { sprintf (temp, "%s\n%s", 
                                                          $$.code = gen_code (temp) ; }
                  ;
 
-sentencia:    IDENTIF '=' expresion ';'                       { sprintf (temp, "(setq %s %s)", $1.code, $3.code) ;
+sentencia:    IDENTIF '=' expresion ';'                       { sprintf (temp, "(setf %s %s)", $1.code, $3.code) ;
+                                                             $$.code = gen_code (temp) ; }
+            |  sentencia_variable ';'                       { sprintf (temp, "%s", $1.code) ;
                                                              $$.code = gen_code (temp) ; }
             | PRINTF '(' STRING ',' lista_expresiones ')' ';' {$$ = $5;}
             | PUTS '(' STRING ')' ';'                          { sprintf (temp, "(print \"%s\")", $3.code) ;
@@ -102,7 +105,7 @@ sentencia:    IDENTIF '=' expresion ';'                       { sprintf (temp, "
                                                               $$.code = gen_code (temp) ;}
             | IF '(' expresion ')' '{' sentencias_if '}' ELSE '{' sentencias_if '}'       {sprintf (temp, "(if %s %s %s)", $3.code, $6.code, $10.code) ;
                                                                                 $$.code = gen_code (temp) ;}        
-            //| FOR '(' inicializ ';' expresion ';' incr_descenso ')' '{' sentencias_mult '}'   {sprintf (temp, "(if %s %s %s)", $3.code, $6.code, $10.code) ;
+            | FOR '(' sentencia_variable ';' expresion ';' incr_descenso ')' '{' sentencias_mult '}'   {sprintf (temp, "(loop while %s do (%s))", $5.code, $10.code);
                                                                                 $$.code = gen_code (temp) ;}   
             ;
 
@@ -114,6 +117,10 @@ sentencias_mult:   sentencia sentencias_mult           {sprintf (temp, "%s\n%s\n
                                                                $$.code = gen_code (temp);}
                 |   sentencia                         {$$ = $1;}
                 ;
+incr_descenso:  IDENTIF '=' NUMBER lista_decl_var            { sprintf (temp, "(setq %s %d) %s", $2.code, $3.value, $4.code) ;
+                                                                   $$.code = gen_code (temp) ; }
+                ;
+
 
 lista_expresiones:     expresion ',' lista_expresiones        {sprintf (temp, "(prin1 %s) %s", $1.code, $3.code);
                                                                $$.code = gen_code (temp);}
@@ -211,6 +218,7 @@ t_keyword keywords [] = { // define las palabras reservadas y los
     "while",       WHILE,
     "if",          IF,
     "else",        ELSE,
+    "for",         FOR,
     NULL,          0               // para marcar el fin de la tabla
 } ;
 
