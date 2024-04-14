@@ -16,6 +16,7 @@ char *mi_malloc (int) ;
 char *gen_code (char *) ;
 char *int_to_string (int) ;
 char *char_to_string (char) ;
+void replace_substring (char *string, char *sub_string)  ;
 
 char temp [2048] ;
 
@@ -77,13 +78,15 @@ lista_decl_var: ',' IDENTIF '=' NUMBER lista_decl_var            { sprintf (temp
                                                                    $$.code = gen_code (temp) ; }
            ;
 
-def_funciones:  MAIN '(' ')' '{' cuerpo_funcion '}'     { sprintf (temp, "(defun main ()\n%s)", $5.code) ;
+def_funciones:  MAIN '(' ')' '{' cuerpo_funcion '}'     { replace_substring($5.code, "main");
+                                                        sprintf (temp, "(defun main ()\n%s)", $5.code) ;
                                                           $$.code = gen_code (temp) ; }
                | sentencia_funcion def_funciones        {sprintf (temp, "%s\n%s", $1.code, $2.code) ;
                                                           $$.code = gen_code (temp) ;}
                ;
 
-sentencia_funcion: IDENTIF '(' ')' '{' cuerpo_funcion '}'    {sprintf (temp, "(defun %s ()\n%s)", $1.code, $5.code) ;
+sentencia_funcion: IDENTIF '(' ')' '{' cuerpo_funcion '}'    {replace_substring($5.code, $1.code);
+                                                            sprintf (temp, "(defun %s ()\n%s)", $1.code, $5.code) ;
                                                               $$.code = gen_code (temp) ; }
 
 cuerpo_funcion:     sentencia  cuerpo_funcion        { sprintf (temp, "%s\n%s", $1.code, $2.code) ;
@@ -92,10 +95,7 @@ cuerpo_funcion:     sentencia  cuerpo_funcion        { sprintf (temp, "%s\n%s", 
                                                          $$.code = gen_code (temp) ; }
                  ;
 
-sentencia:    IDENTIF '=' expresion ';'                       { sprintf (temp, "(setf %s %s)", $1.code, $3.code) ;
-                                                             $$.code = gen_code (temp) ; }
-            |  sentencia_variable ';'                       { sprintf (temp, "%s", $1.code) ;
-                                                             $$.code = gen_code (temp) ; }
+sentencia:  var_local                                           {$$ = $1;}
             | PRINTF '(' STRING ',' lista_expresiones ')' ';' {$$ = $5;}
             | PUTS '(' STRING ')' ';'                          { sprintf (temp, "(print \"%s\")", $3.code) ;
                                                               $$.code = gen_code (temp) ; }
@@ -105,9 +105,21 @@ sentencia:    IDENTIF '=' expresion ';'                       { sprintf (temp, "
                                                               $$.code = gen_code (temp) ;}
             | IF '(' expresion ')' '{' sentencias_if '}' ELSE '{' sentencias_if '}'       {sprintf (temp, "(if %s %s %s)", $3.code, $6.code, $10.code) ;
                                                                                 $$.code = gen_code (temp) ;}        
-            | FOR '(' sentencia_variable ';' expresion ';' incr_descenso ')' '{' sentencias_mult '}'   {sprintf (temp, "(loop while %s do (%s))", $5.code, $10.code);
+            | FOR '(' var_local  expresion ';' incr_descenso ')' '{' sentencias_mult '}'   {sprintf (temp, "(loop while %s do (%s))", $4.code, $9.code);
                                                                                 $$.code = gen_code (temp) ;}   
             ;
+var_local: IDENTIF '=' expresion ';'                       { sprintf (temp, "(setf FUNC-%s %s)", $1.code, $3.code) ;
+                                                             $$.code = gen_code (temp) ; }
+            |  INTEGER IDENTIF ';'                             { sprintf (temp, "(setq FUNC-%s 0)", $2.code) ;
+                                                                      $$.code = gen_code (temp) ; }
+            | INTEGER IDENTIF '=' NUMBER lista_decl_var_local ';'   { sprintf (temp, "(setq FUNC-%s %d) %s", $2.code, $4.value, $5.code) ;
+                                                                      $$.code = gen_code (temp) ; }
+
+lista_decl_var_local: ',' IDENTIF '=' NUMBER lista_decl_var_local            { sprintf (temp, "(setq FUNC-%s %d) %s", $2.code, $4.value, $5.code) ;
+                                                                   $$.code = gen_code (temp) ; }
+           |                                                     { strcpy(temp, "") ;
+                                                                   $$.code = gen_code (temp) ; }
+           ;          
 
 sentencias_if:    sentencia sentencias_if           {sprintf (temp, "\nprogn %s\n\t%s\n", $1.code, $2.code);
                                                                $$.code = gen_code (temp);}
@@ -117,8 +129,7 @@ sentencias_mult:   sentencia sentencias_mult           {sprintf (temp, "%s\n%s\n
                                                                $$.code = gen_code (temp);}
                 |   sentencia                         {$$ = $1;}
                 ;
-incr_descenso:  IDENTIF '=' NUMBER lista_decl_var            { sprintf (temp, "(setq %s %d) %s", $2.code, $3.value, $4.code) ;
-                                                                   $$.code = gen_code (temp) ; }
+incr_descenso:  IDENTIF '=' NUMBER lista_decl_var_local            { ; }
                 ;
 
 
@@ -199,6 +210,22 @@ char *my_malloc (int nbytes)       // reserva n bytes de memoria dinamica
 
     return p ;
 }
+
+void replace_substring (char *string, char *sub_string){
+    char *p;
+    char s1[] = "FUNC";
+    do {
+    p = strstr(string, s1);
+    if (p != NULL) {
+        size_t len1 = strlen(s1);
+        size_t len2 = strlen(sub_string);
+        if (len1 != len2)
+            memmove(p + len2, p + len1, strlen(p + len1) + 1);
+        memcpy(p, sub_string, len2);
+    }
+    } while (p != NULL);
+}
+
 
 
 /***************************************************************************/
