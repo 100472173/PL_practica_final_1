@@ -17,6 +17,7 @@ char *gen_code (char *) ;
 char *int_to_string (int) ;
 char *char_to_string (char) ;
 void replace_substring (char *string, char *sub_string)  ;
+int is_expression(const char *cadena) ;
 
 char temp [2048] ;
 
@@ -44,6 +45,7 @@ typedef struct s_attr {
 %token IF
 %token ELSE
 %token FOR
+%token RETURN
 
 %right '='                    // es la ultima operacion que se debe realizar
 %left '+' '-'                 // menor orden de precedencia
@@ -78,22 +80,38 @@ lista_decl_var: ',' IDENTIF '=' NUMBER lista_decl_var            { sprintf (temp
                                                                    $$.code = gen_code (temp) ; }
            ;
 
-def_funciones:  MAIN '(' ')' '{' cuerpo_funcion '}'     { replace_substring($5.code, "main");
-                                                        sprintf (temp, "(defun main ()\n%s)", $5.code) ;
+def_funciones:  MAIN '(' argumentos ')' '{' cuerpo_funcion '}'     { replace_substring($5.code, "main");
+                                                        sprintf (temp, "(defun main (%s)\n%s)", $3.code, $6.code) ;
                                                           $$.code = gen_code (temp) ; }
                | sentencia_funcion def_funciones        {sprintf (temp, "%s\n%s", $1.code, $2.code) ;
                                                           $$.code = gen_code (temp) ;}
                ;
 
-sentencia_funcion: IDENTIF '(' ')' '{' cuerpo_funcion '}'    {replace_substring($5.code, $1.code);
-                                                            sprintf (temp, "(defun %s ()\n%s)", $1.code, $5.code) ;
+sentencia_funcion: IDENTIF '(' argumentos ')' '{' cuerpo_funcion '}'    {replace_substring($5.code, $1.code);
+                                                            sprintf (temp, "(defun %s (%s)\n%s)", $1.code, $3.code, $6.code) ;
                                                               $$.code = gen_code (temp) ; }
 
-cuerpo_funcion:     sentencia  cuerpo_funcion        { sprintf (temp, "%s\n%s", $1.code, $2.code) ;
-                                                          $$.code = gen_code (temp) ; }
-                    |                                   { strcpy(temp, "") ;
-                                                         $$.code = gen_code (temp) ; }
+argumentos:   INTEGER IDENTIF resto_argumentos    {sprintf(temp, "%s %s", $2.code, $3.code);
+                                                   $$.code = gen_code(temp);}
+             |                                    {;}
+
+resto_argumentos: ',' INTEGER IDENTIF resto_argumentos  {$$ = $3;}
+                   |                                    {;}
+
+
+cuerpo_funcion:     sentencia  cuerpo_funcion funcion_return      { sprintf (temp, "%s\n%s", $1.code, $2.code) ;
+                                                                    $$.code = gen_code (temp) ; }
+                    |                                              { strcpy(temp, "") ;
+                                                                     $$.code = gen_code (temp) ; }
                  ;
+
+funcion_return:     RETURN expresion ';'        { if (is_expression($2.code) == 0) {
+                                                     sprintf(temp, "return FUNC-%s", $2.code);
+                                                  }
+                                                  else {
+                                                     sprintf(temp, "return %s", $2.code);
+                                                  }
+                                                  $$.code = gen_code (temp) ;}
 
 sentencia:  var_local                                           {$$ = $1;}
             | PRINTF '(' STRING ',' lista_expresiones ')' ';' {$$ = $5;}
@@ -226,7 +244,23 @@ void replace_substring (char *string, char *sub_string){
     } while (p != NULL);
 }
 
+int is_expression(const char *cadena) {
+    int i;
+    int longitud = strlen(cadena);
 
+    for (i = 0; i < longitud; i++) {
+        if (isdigit(cadena[i])) {
+            // Si encuentra un dígito, devuelve 1 (verdadero)
+            return 1;
+        } else if (cadena[i] == '+' || cadena[i] == '-' || cadena[i] == '*' || cadena[i] == '/') {
+            // Si encuentra uno de los operadores, devuelve 1 (verdadero)
+            return 1;
+        }
+    }
+
+    // Si no encuentra ninguno, devuelve 0 (falso)
+    return 0;
+}
 
 /***************************************************************************/
 /********************** Seccion de Palabras Reservadas *********************/
@@ -246,6 +280,7 @@ t_keyword keywords [] = { // define las palabras reservadas y los
     "if",          IF,
     "else",        ELSE,
     "for",         FOR,
+    "return",      RETURN,
     NULL,          0               // para marcar el fin de la tabla
 } ;
 
