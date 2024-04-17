@@ -93,10 +93,12 @@ sentencia_funcion: IDENTIF '(' argumentos ')' '{' cuerpo_funcion '}'    {replace
 
 argumentos:   INTEGER IDENTIF resto_argumentos    {sprintf(temp, "%s %s", $2.code, $3.code);
                                                    $$.code = gen_code(temp);}
-             |                                    {;}
+             |                                    { strcpy(temp, "") ;
+                                                   $$.code = gen_code (temp) ; }
 
 resto_argumentos: ',' INTEGER IDENTIF resto_argumentos  {$$ = $3;}
-                   |                                    {;}
+                   |                                    { strcpy(temp, "") ;
+                                                         $$.code = gen_code (temp) ; }
 
 
 cuerpo_funcion:     sentencia  cuerpo_funcion funcion_return      { sprintf (temp, "%s\n%s", $1.code, $2.code) ;
