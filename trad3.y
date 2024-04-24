@@ -69,14 +69,10 @@ typedef struct s_attr {
 %token RETURN
 %token AND            // Identifica el operador lógico AND
 %token OR             // Identifica el operador lógico OR
-%token NOT            // Identifica el operador lógico NOT
 %token NEQ            // Identifica el operador de desigualdad !=
 %token EQ             // Identifica el operador de igualdad ==
-%token LT             // Identifica el operador menor que <
-%token GT             // Identifica el operador mayor que >
 %token LTE            // Identifica el operador menor o igual que <=
 %token GTE            // Identifica el operador mayor o igual que >=
-%token MOD            // Identifica el operador módulo %
 
 %right '='                    // es la ultima operacion que se debe realizar
 %left '+' '-'                 // menor orden de precedencia
@@ -234,21 +230,21 @@ operador_logico: AND    { strcpy (temp, "and") ;
                           $$.code = gen_code (temp) ; }
                 | OR    { strcpy (temp, "or") ;
                           $$.code = gen_code (temp) ; }
-                | NOT   { strcpy (temp, "not") ;
+                | '!'   { strcpy (temp, "not") ;
                           $$.code = gen_code (temp) ; }
                 | NEQ   { strcpy (temp, "/=") ;
                           $$.code = gen_code (temp) ; }
                 | EQ    { strcpy (temp, "=") ;
                           $$.code = gen_code (temp) ; }
-                | LT    { strcpy (temp, "<") ;
+                | '<'    { strcpy (temp, "<") ;
                           $$.code = gen_code (temp) ; }
-                | GT    { strcpy (temp, ">");
+                | '>'    { strcpy (temp, ">");
                           $$.code = gen_code (temp) ; }
                 | LTE   { strcpy (temp, "<=");
                           $$.code = gen_code (temp) ; }
                 | GTE   { strcpy (temp, ">=");
                           $$.code = gen_code (temp) ; }
-                | MOD   { strcpy(temp, "mod");
+                | '%'   { strcpy(temp, "mod");
                           $$.code = gen_code (temp) ; }
                 ;
 
@@ -513,14 +509,10 @@ t_keyword keywords [] = { // define las palabras reservadas y los
     "return",      RETURN,
     "&&",          AND,
     "||",          OR,
-    "!",           NOT,
     "!=",          NEQ,
     "==",          EQ,
-    "<",           LT,
-    ">",           GT,
     "<=",          LTE,
     ">=",          GTE,
-    "%",           MOD,
     NULL,          0               // para marcar el fin de la tabla
 } ;
 
