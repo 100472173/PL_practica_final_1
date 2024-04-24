@@ -35,6 +35,9 @@ typedef struct s_attr {
 %token STRING
 %token MAIN          // identifica el comienzo del proc. main
 %token WHILE         // identifica el bucle main
+%token SETQ
+%token SETF
+%token DEFUN
 
 
 
@@ -45,7 +48,7 @@ typedef struct s_attr {
 
 %%                            // Seccion 3 Gramatica - Semantico
 
-axioma:       sentencia ';'              { printf ("%s\n", $1.code) ; }
+axioma:       decl_variables def_funciones            { printf ("\n%s%s\n\n", $1.code, $2.code) ; }
                 r_expr                   { ; }
             ;
 
@@ -53,7 +56,35 @@ r_expr:                                  { ; }
             |   axioma                   { ; }
             ;
 
-sentencia:    IDENTIF '=' expresion      { sprintf (temp, "(setq %s %s)", $1.code, $3.code) ; 
+decl_variables:   '(' SETQ IDENTIF expresion ')'      { if (strcmp($4.code, "0") == 0) {
+                                                            sprintf (temp, "variable %s\n", $3.code) ;
+                                                       }
+                                                       else {
+                                                            sprintf (temp, "variable %s\n%s %s !\n", $3.code, $4.code, $3.code) ;
+                                                       }
+                                                       $$.code = gen_code (temp) ; }
+                  | '(' SETF IDENTIF expresion ')'      { sprintf (temp, "%s %s !\n", $4.code, $3.code) ;
+                                                  $$.code = gen_code (temp) ; }
+
+                ;
+
+def_funciones:    '(' DEFUN MAIN '(' ')' cuerpo_funcion ')'   { sprintf (temp, ": main %s ;\n", $6.code) ;
+                                                                $$.code = gen_code (temp) ; }
+                | sentencia_funcion def_funciones             {sprintf (temp, "%s\n%s", $1.code, $2.code) ;
+                                                               $$.code = gen_code (temp) ; }
+                ;
+
+sentencia_funcion: '(' DEFUN IDENTIF '(' ')' cuerpo_funcion ')'   { sprintf (temp, ": %s %s ;\n", $3.code, $6.code) ;
+                                                                    $$.code = gen_code (temp) ; }
+
+sentencia:    SETQ IDENTIF expresion      { if (strcmp($3.code, "0") == 0) {
+                                                sprintf (temp, "variable %s", $2.code) ;
+                                           }
+                                           else {
+                                                sprintf (temp, "variable %s\n%s %s !", $2.code, $3.code, $2.code) ;
+                                           }
+                                           $$.code = gen_code (temp) ; }
+            | SETF IDENTIF expresion      { sprintf (temp, "%s %s !", $3.code, $2.code) ;
                                            $$.code = gen_code (temp) ; }
             | '@' expresion              { sprintf (temp, "(print %s)", $2.code) ;  
                                            $$.code = gen_code (temp) ; }
@@ -62,19 +93,17 @@ sentencia:    IDENTIF '=' expresion      { sprintf (temp, "(setq %s %s)", $1.cod
             ;
           
 expresion:      termino                  { $$ = $1 ; }
-            |   expresion '+' expresion  { sprintf (temp, "(+ %s %s)", $1.code, $3.code) ;
-                                           $$.code = gen_code (temp) ; }
-            |   expresion '-' expresion  { sprintf (temp, "(- %s %s)", $1.code, $3.code) ;
-                                           $$.code = gen_code (temp) ; }
-            |   expresion '*' expresion  { sprintf (temp, "(* %s %s)", $1.code, $3.code) ;
-                                           $$.code = gen_code (temp) ; }
-            |   expresion '/' expresion  { sprintf (temp, "(/ %s %s)", $1.code, $3.code) ;
-                                           $$.code = gen_code (temp) ; }
+            |  '(' '+' expresion expresion ')'  { sprintf (temp, "(+ %s %s)", $1.code, $3.code) ;
+                                                  $$.code = gen_code (temp) ; }
+            |   '(' '-' expresion expresion ')'   { sprintf (temp, "(- %s %s)", $1.code, $3.code) ;
+                                                   $$.code = gen_code (temp) ; }
+            |   '(' '/' expresion expresion ')'   { sprintf (temp, "(* %s %s)", $1.code, $3.code) ;
+                                                     $$.code = gen_code (temp) ; }
+            |   '(' '*' expresion expresion ')'   { sprintf (temp, "(/ %s %s)", $1.code, $3.code) ;
+                                                  $$.code = gen_code (temp) ; }
             ;
 
-termino:        operando                           { $$ = $1 ; }                          
-            |   '+' operando %prec UNARY_SIGN      { sprintf (temp, "(+ %s)", $2.code) ;
-                                                     $$.code = gen_code (temp) ; }
+termino:        operando                           { $$ = $1 ; }
             |   '-' operando %prec UNARY_SIGN      { sprintf (temp, "(- %s)", $2.code) ;
                                                      $$.code = gen_code (temp) ; }    
             ;
@@ -83,7 +112,6 @@ operando:       IDENTIF                  { sprintf (temp, "%s", $1.code) ;
                                            $$.code = gen_code (temp) ; }
             |   NUMBER                   { sprintf (temp, "%d", $1.value) ;
                                            $$.code = gen_code (temp) ; }
-            |   '(' expresion ')'        { $$ = $2 ; }
             ;
 
 
@@ -141,6 +169,9 @@ typedef struct s_keyword { // para las palabras reservadas de C
 t_keyword keywords [] = { // define las palabras reservadas y los
     "main",        MAIN,           // y los token asociados
     "int",         INTEGER,
+    "setq",        SETQ,
+    "setf",        SETF,
+    "defun",       DEFUN,
     NULL,          0               // para marcar el fin de la tabla
 } ;
 
