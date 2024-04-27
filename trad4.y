@@ -169,7 +169,7 @@ sentencia:        var_local                                                     
                                                                                                                   $$.code = gen_code (temp) ; }
                 | IF '(' expr_logica ')' '{' sentencias_if '}' ELSE '{' sentencias_if '}'                        { sprintf (temp, "(if %s\n%s\n%s)", $3.code, $6.code, $10.code) ;
                                                                                                                     $$.code = gen_code (temp) ; }
-                | FOR '(' IDENTIF '=' expresion ';'  expr_logica ';' IDENTIF '=' expresion  ')' '{' sentencias_mult '}'          { sprintf (temp, "(loop while %s do\n%s)", $7.code, $14.code) ;
+                | FOR '(' IDENTIF '=' expresion ';'  expr_logica ';' incr  ')' '{' sentencias_mult '}'          { sprintf (temp, "(loop while %s do\n%s\n%s)", $7.code, $12.code, $9.code) ;
                                                                                                                             $$.code = gen_code (temp) ; }
                 | IDENTIF '(' expresion lista_argumentos ')' ';'                                                 { sprintf (temp, "(%s %s %s)", $1.code, $3.code, $4.code) ;
                                                                                                   $$.code = gen_code (temp) ; }
@@ -179,6 +179,15 @@ lista_argumentos:   ',' expresion lista_argumentos      { sprintf (temp, "%s %s"
                                                             $$.code = gen_code (temp) ; }
                    |                                       { strcpy(temp, "") ;
                                                               $$.code = gen_code (temp) ; }
+
+
+incr:  IDENTIF '=' expresion                              { if (search_string($1.code) == 1) {
+                                                                               sprintf (temp, "(setf FUNC_%s %s)", $1.code, $3.code) ;
+                                                                             }
+                                                                             else {
+                                                                               sprintf (temp, "(setf %s %s)", $1.code, $3.code) ;
+                                                                             }
+                                                                             $$.code = gen_code (temp) ; }
 
 var_local:    IDENTIF '=' expresion ';'                             { if (search_string($1.code) == 1) {
                                                                         sprintf (temp, "(setf FUNC_%s %s)", $1.code, $3.code) ;
@@ -744,41 +753,12 @@ int main ()
 }
 
 /*
-#include <stdio.h>
-square (int v) {
-return (v*v) ;
-}
-fact (int n) {
-int f ;
-if (n == 1) {
-f = 1 ;
-} else {
-f = n * fact (n-1) ;
-}
-return f ;
-}
-is_even (int v) {
-int ep ;
-printf ("%d", v) ;
-if (v % 2 == 0) {
-puts (" is even") ;
-ep = 1 ;
-} else {
-puts (" is odd") ;
-ep = 0 ;
-}
-return ep ;
-}
+int a = 1 ;
 main () {
-printf ("%d\n", square (7)) ;
-puts (" ") ;
-printf ("%d\n", fact (7)) ;
-puts (" ") ;
-printf ("%d\n", is_even (7)) ;
-puts (" ") ;
-printf ("%d\n", is_even (8)) ;
-puts (" ") ;
-is_even (8) ;
+a = 0 ;
+while (a != 10) {
+printf ("%d", a) ;
+a = a + 1 ;
 }
-//@ (main)
+}
 */
