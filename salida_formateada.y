@@ -69,7 +69,7 @@ typedef struct s_attr {
 
 %%                            // Seccion 3 Gramatica - Semantico
 
-axioma:       decl_variables def_funciones             { printf ("%s %s", $1.code, $2.code);}
+axioma:       decl_variables def_funciones             { printf ("\n%s%s\n", $1.code, $2.code) ; }
               r_expr                                   { ; }
             ;
 
@@ -77,7 +77,7 @@ r_expr:        axioma                        { ; }
             |                                { ; }
             ;
 
-decl_variables:      sentencia_variable ';' decl_variables    { sprintf (temp, "%s %s", $1.code, $3.code) ;
+decl_variables:      sentencia_variable ';' decl_variables    { sprintf (temp, "%s\n%s", $1.code, $3.code) ;
                                                                 $$.code = gen_code (temp) ; }
                   |                                           { strcpy(temp, "") ;
                                                                 $$.code = gen_code (temp) ;}
@@ -99,15 +99,15 @@ resto_sentencia_variable:     ',' IDENTIF '=' NUMBER resto_sentencia_variable   
 
 def_funciones:      MAIN '(' argumentos ')' '{' cuerpo_funcion '}'     { char * new_code = replace_substring($6.code, "main") ;
                                                                          clear_array() ;
-                                                                         sprintf (temp, "(defun main (%s) %s)", $3.code, new_code) ;
+                                                                         sprintf (temp, "(defun main (%s)\n%s)", $3.code, new_code) ;
                                                                          $$.code = gen_code (temp) ; }
-                  | sentencia_funcion def_funciones                    { sprintf (temp, "%s %s", $1.code, $2.code) ;
+                  | sentencia_funcion def_funciones                    { sprintf (temp, "%s\n%s", $1.code, $2.code) ;
                                                                          $$.code = gen_code (temp) ;}
                   ;
 
 sentencia_funcion:   IDENTIF '(' argumentos ')' '{' cuerpo_funcion '}'    { char * new_code = replace_substring($6.code, $1.code) ;
                                                                             clear_array() ;
-                                                                            sprintf (temp, "(defun %s (%s) %s)", $1.code, $3.code, new_code) ;
+                                                                            sprintf (temp, "(defun %s (%s)\n%s)", $1.code, $3.code, new_code) ;
                                                                             $$.code = gen_code (temp) ; }
                    ;
 
@@ -127,13 +127,13 @@ resto_argumentos:     ',' tipo_argumento resto_argumentos     { sprintf(temp, "%
                                                                 $$.code = gen_code (temp) ; }
                     ;
 
-cuerpo_funcion:     sentencia cuerpo_funcion         { sprintf (temp, "%s %s", $1.code, $2.code) ;
+cuerpo_funcion:     sentencia cuerpo_funcion         { sprintf (temp, "%s\n%s", $1.code, $2.code) ;
                                                        $$.code = gen_code (temp) ; }
                  |  funcion_return cuerpo_funcion    { if (strcmp($2.code, "") == 0) {
                                                             sprintf(temp, "%s", $1.code) ;
                                                        }
                                                        else {
-                                                            sprintf(temp, "(return-from FUNC %s) %s", $1.code, $2.code) ;
+                                                            sprintf(temp, "(return-from FUNC %s)\n%s", $1.code, $2.code) ;
                                                        }
                                                        $$.code = gen_code (temp) ; }
                  |                                   { strcpy(temp, "") ;
@@ -147,13 +147,13 @@ sentencia:        var_local                                                     
                 | PRINTF '(' STRING ',' lista_printf ')' ';'                                                { $$ = $5 ; }
                 | PUTS '(' STRING ')' ';'                                                                   { sprintf (temp, "(print \"%s\")", $3.code) ;
                                                                                                               $$.code = gen_code (temp) ; }
-                | WHILE '(' expr_logica ')' '{' lista_sentencias '}'                                        { sprintf (temp, "(loop while %s do %s)", $3.code, $6.code) ;
+                | WHILE '(' expr_logica ')' '{' lista_sentencias '}'                                        { sprintf (temp, "(loop while %s do\n%s)", $3.code, $6.code) ;
                                                                                                               $$.code = gen_code (temp) ; }
                 | IF '(' expr_logica ')' '{' sentencias_if '}'                                              { sprintf (temp, "(if %s %s)", $3.code, $6.code) ;
                                                                                                               $$.code = gen_code (temp) ; }
-                | IF '(' expr_logica ')' '{' sentencias_if '}' ELSE '{' sentencias_if '}'                   { sprintf (temp, "(if %s %s %s)", $3.code, $6.code, $10.code) ;
+                | IF '(' expr_logica ')' '{' sentencias_if '}' ELSE '{' sentencias_if '}'                   { sprintf (temp, "(if %s\n%s\n%s)", $3.code, $6.code, $10.code) ;
                                                                                                               $$.code = gen_code (temp) ; }
-                | FOR '(' asignacion_for ';'  expr_logica ';' asignacion_for ')' '{' lista_sentencias '}'   { sprintf (temp, "%s (loop while %s do %s %s)", $3.code, $5.code, $10.code, $7.code) ;
+                | FOR '(' asignacion_for ';'  expr_logica ';' asignacion_for ')' '{' lista_sentencias '}'   { sprintf (temp, "%s\n(loop while %s do\n%s\n%s)", $3.code, $5.code, $10.code, $7.code) ;
                                                                                                               $$.code = gen_code (temp) ; }
                 | IDENTIF '(' parametros ')' ';'                                                            { sprintf (temp, "(%s %s)", $1.code, $3.code) ;
                                                                                                               $$.code = gen_code (temp) ; }
@@ -170,26 +170,26 @@ lista_printf:          expresion ',' lista_printf             { sprintf (temp, "
                     ;
 
 sentencias_if:    sentencia lista_sentencias              { if ((strcmp($2.code, "") == 0 && strstr($1.code, "prin1") == NULL)) {
-                                                                sprintf (temp, "%s", $1.code) ;
+                                                                sprintf (temp, "\t%s", $1.code) ;
                                                             }
                                                             else {
-                                                                sprintf (temp, "(progn %s %s)", $1.code, $2.code) ;
+                                                                sprintf (temp, "(progn %s\t%s)", $1.code, $2.code) ;
                                                             }
                                                             $$.code = gen_code (temp) ; }
                |  funcion_return lista_sentencias         { if (strcmp($2.code, "") == 0) {
                                                                 sprintf(temp, "(return-from FUNC %s)", $1.code) ;
                                                             }
                                                             else {
-                                                                sprintf(temp, "(progn (return-from FUNC %s) %s)", $1.code, $2.code) ;
+                                                                sprintf(temp, "(progn (return-from FUNC %s)\t%s)", $1.code, $2.code) ;
                                                             }
                                                             $$.code = gen_code (temp) ; }
                |                                          { strcpy(temp, "") ;
                                                             $$.code = gen_code (temp) ; }
                ;
 
-lista_sentencias:     sentencia lista_sentencias          { sprintf (temp, "%s %s", $1.code, $2.code);
+lista_sentencias:     sentencia lista_sentencias          { sprintf (temp, "%s\n%s\n", $1.code, $2.code);
                                                             $$.code = gen_code (temp) ; }
-                   |  funcion_return lista_sentencias     { sprintf(temp, "(return-from FUNC %s) %s", $1.code, $2.code) ;
+                   |  funcion_return lista_sentencias     { sprintf(temp, "\n(return-from FUNC %s)\n\t%s", $1.code, $2.code) ;
                                                             $$.code = gen_code (temp) ; }
                    |                                      { strcpy(temp, "") ;
                                                             $$.code = gen_code (temp) ; }
@@ -426,7 +426,6 @@ void clear_array() {
     }
     tamaño_locales = 0;
 }
-
 
 /***************************************************************************/
 /********************** Seccion de Palabras Reservadas *********************/
