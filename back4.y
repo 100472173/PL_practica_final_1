@@ -13,6 +13,7 @@ char *mi_malloc (int) ;
 char *gen_code (char *) ;
 char *int_to_string (int) ;
 char *char_to_string (char) ;
+int is_expression(const char *cadena) ;
 
 char temp [2048] ;
 
@@ -38,6 +39,8 @@ typedef struct s_attr {
 %token SETQ
 %token SETF
 %token DEFUN
+%token PRINT
+%token PRIN1
 
 
 
@@ -49,69 +52,81 @@ typedef struct s_attr {
 %%                            // Seccion 3 Gramatica - Semantico
 
 axioma:       decl_variables def_funciones            { printf ("\n%s%s\n\n", $1.code, $2.code) ; }
-                r_expr                   { ; }
+                r_expr                                { ; }
             ;
 
 r_expr:                                  { ; }
             |   axioma                   { ; }
             ;
 
-decl_variables:   '(' SETQ IDENTIF expresion ')'      { if (strcmp($4.code, "0") == 0) {
-                                                            sprintf (temp, "variable %s\n", $3.code) ;
-                                                       }
-                                                       else {
-                                                            sprintf (temp, "variable %s\n%s %s !\n", $3.code, $4.code, $3.code) ;
-                                                       }
-                                                       $$.code = gen_code (temp) ; }
-                  | '(' SETF IDENTIF expresion ')'      { sprintf (temp, "%s %s !\n", $4.code, $3.code) ;
-                                                  $$.code = gen_code (temp) ; }
+decl_variables:     '(' SETQ IDENTIF expresion ')'      { if (strcmp($4.code, "0") == 0) {
+                                                                sprintf (temp, "variable %s\n", $3.code) ;
+                                                            }
+                                                            else {
+                                                                sprintf (temp, "variable %s\n%s %s !\n", $3.code, $4.code, $3.code) ;
+                                                            }
+                                                            $$.code = gen_code (temp) ; }
+                    |   '(' SETF IDENTIF expresion ')'      { sprintf (temp, "%s %s !\n", $4.code, $3.code) ;
+                                                            $$.code = gen_code (temp) ; }
 
                 ;
 
-def_funciones:    '(' DEFUN MAIN '(' ')' cuerpo_funcion ')'   { sprintf (temp, ": main %s ;\n", $6.code) ;
+def_funciones:    '(' DEFUN MAIN '(' ')' cuerpo_funcion ')'     {sprintf (temp, ": main %s ;\n", $6.code) ;
                                                                 $$.code = gen_code (temp) ; }
-                | sentencia_funcion def_funciones             {sprintf (temp, "%s\n%s", $1.code, $2.code) ;
-                                                               $$.code = gen_code (temp) ; }
+                | sentencia_funcion def_funciones               {sprintf (temp, "%s\n%s", $1.code, $2.code) ;
+                                                                $$.code = gen_code (temp) ; }
                 ;
 
-sentencia_funcion: '(' DEFUN IDENTIF '(' ')' cuerpo_funcion ')'   { sprintf (temp, ": %s %s ;\n", $3.code, $6.code) ;
+sentencia_funcion: '(' DEFUN IDENTIF '(' ')' cuerpo_funcion ')'     {sprintf (temp, ": %s %s ;\n", $3.code, $6.code) ;
                                                                     $$.code = gen_code (temp) ; }
 
-sentencia:    SETQ IDENTIF expresion      { if (strcmp($3.code, "0") == 0) {
-                                                sprintf (temp, "variable %s", $2.code) ;
-                                           }
-                                           else {
-                                                sprintf (temp, "variable %s\n%s %s !", $2.code, $3.code, $2.code) ;
-                                           }
-                                           $$.code = gen_code (temp) ; }
-            | SETF IDENTIF expresion      { sprintf (temp, "%s %s !", $3.code, $2.code) ;
-                                           $$.code = gen_code (temp) ; }
-            | '@' expresion              { sprintf (temp, "(print %s)", $2.code) ;  
-                                           $$.code = gen_code (temp) ; }
-            | expresion                  { sprintf (temp, "(print %s)", $1.code) ;  
-                                           $$.code = gen_code (temp) ; }
+cuerpo_funcion: sentencia cuerpo_funcion            {sprintf(temp, "%s\n%s", $1.code, $2.code);
+                                                    $$.code = gen_code(temp); }
+                |                                   { strcpy(temp, "") ;
+                                                    $$.code = gen_code (temp) ; }
+
+sentencia:     '(' SETQ IDENTIF expresion ')'       {if (strcmp($4.code, "0") == 0) {
+                                                        sprintf (temp, "variable %s", $2.code) ;
+                                                    }
+                                                    else {
+                                                        sprintf (temp, "variable %s\n%s %s !", $3.code, $4.code, $3.code) ;
+                                                    }
+                                                    $$.code = gen_code (temp) ; }
+            |   '(' SETF IDENTIF expresion ')'      {sprintf (temp, "%s %s !", $4.code, $2.code) ;
+                                                    $$.code = gen_code (temp) ; }
+            |  '(' PRINT STRING ')'                 {sprintf(temp, ".\" %s\"", $3.code);
+                                                    $$.code = gen_code(temp);}
+            |   '(' PRIN1 expresion ')'             {if (is_expression($3.code) == 0){
+                                                        sprintf(temp, "%s @ .", $3.code);
+                                                    }
+                                                    else {
+                                                        sprintf(temp, "%s .", $3.code);    
+                                                    }
+                                                    $$.code = gen_code(temp);
+                                                    }
             ;
+
           
-expresion:      termino                  { $$ = $1 ; }
-            |  '(' '+' expresion expresion ')'  { sprintf (temp, "(+ %s %s)", $1.code, $3.code) ;
-                                                  $$.code = gen_code (temp) ; }
-            |   '(' '-' expresion expresion ')'   { sprintf (temp, "(- %s %s)", $1.code, $3.code) ;
-                                                   $$.code = gen_code (temp) ; }
-            |   '(' '/' expresion expresion ')'   { sprintf (temp, "(* %s %s)", $1.code, $3.code) ;
-                                                     $$.code = gen_code (temp) ; }
-            |   '(' '*' expresion expresion ')'   { sprintf (temp, "(/ %s %s)", $1.code, $3.code) ;
-                                                  $$.code = gen_code (temp) ; }
+expresion:      termino                             { $$ = $1 ; }
+            |  '(' '+' expresion expresion ')'      { sprintf (temp, "(%s %s +)", $1.code, $3.code) ;
+                                                    $$.code = gen_code (temp) ; }
+            |   '(' '-' expresion expresion ')'     { sprintf (temp, "(%s %s -)", $1.code, $3.code) ;
+                                                    $$.code = gen_code (temp) ; }
+            |   '(' '*' expresion expresion ')'     { sprintf (temp, "(%s %s *)", $1.code, $3.code) ;
+                                                    $$.code = gen_code (temp) ; }
+            |   '(' '/' expresion expresion ')'     { sprintf (temp, "(%s %s /)", $1.code, $3.code) ;
+                                                    $$.code = gen_code (temp) ; }
             ;
 
-termino:        operando                           { $$ = $1 ; }
-            |   '-' operando %prec UNARY_SIGN      { sprintf (temp, "(- %s)", $2.code) ;
-                                                     $$.code = gen_code (temp) ; }    
+termino:        operando                            { $$ = $1 ; }
+            |   '-' operando %prec UNARY_SIGN       { sprintf (temp, "(- %s)", $2.code) ;
+                                                    $$.code = gen_code (temp) ; }    
             ;
 
-operando:       IDENTIF                  { sprintf (temp, "%s", $1.code) ;
-                                           $$.code = gen_code (temp) ; }
-            |   NUMBER                   { sprintf (temp, "%d", $1.value) ;
-                                           $$.code = gen_code (temp) ; }
+operando:       IDENTIF                 { sprintf (temp, "%s", $1.code) ;
+                                        $$.code = gen_code (temp) ; }
+            |   NUMBER                  { sprintf (temp, "%d", $1.value) ;
+                                        $$.code = gen_code (temp) ; }
             ;
 
 
@@ -156,6 +171,23 @@ char *my_malloc (int nbytes)       // reserva n bytes de memoria dinamica
     return p ;
 }
 
+int is_expression(const char *cadena) {
+    int i;
+    int longitud = strlen(cadena);
+
+    for (i = 0; i < longitud; i++) {
+        if (isdigit(cadena[i])) {
+            // Si encuentra un dígito, devuelve 1 (verdadero)
+            return 1;
+        } else if (cadena[i] == '+' || cadena[i] == '-' || cadena[i] == '*' || cadena[i] == '/') {
+            // Si encuentra uno de los operadores, devuelve 1 (verdadero)
+            return 1;
+        }
+    }
+
+    // Si no encuentra ninguno, devuelve 0 (falso)
+    return 0;
+}
 
 /***************************************************************************/
 /********************** Seccion de Palabras Reservadas *********************/
@@ -172,6 +204,8 @@ t_keyword keywords [] = { // define las palabras reservadas y los
     "setq",        SETQ,
     "setf",        SETF,
     "defun",       DEFUN,
+    "print",       PRINT,
+    "prin1",       PRIN1,
     NULL,          0               // para marcar el fin de la tabla
 } ;
 
