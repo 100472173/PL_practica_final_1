@@ -59,7 +59,13 @@ r_expr:                                  { ; }
             |   axioma                   { ; }
             ;
 
-decl_variables:     '(' SETQ IDENTIF expresion ')'      { if (strcmp($4.code, "0") == 0) {
+decl_variables:      sentencia_variable decl_variables    { sprintf (temp, "%s %s", $1.code, $2.code) ;
+                                                                $$.code = gen_code (temp) ; }
+                  |                                           { strcpy(temp, "") ;
+                                                                $$.code = gen_code (temp) ;}
+                  ;
+
+sentencia_variable:     '(' SETQ IDENTIF expresion ')'      { if (strcmp($4.code, "0") == 0) {
                                                                 sprintf (temp, "variable %s\n", $3.code) ;
                                                             }
                                                             else {
@@ -96,14 +102,8 @@ sentencia:     '(' SETQ IDENTIF expresion ')'       {if (strcmp($4.code, "0") ==
                                                     $$.code = gen_code (temp) ; }
             |  '(' PRINT STRING ')'                 {sprintf(temp, ".\" %s\"", $3.code);
                                                     $$.code = gen_code(temp);}
-            |   '(' PRIN1 expresion ')'             {if (is_expression($3.code) == 0){
-                                                        sprintf(temp, "%s @ .", $3.code);
-                                                    }
-                                                    else {
-                                                        sprintf(temp, "%s .", $3.code);    
-                                                    }
-                                                    $$.code = gen_code(temp);
-                                                    }
+            |   '(' PRIN1 expresion ')'             { sprintf(temp, "%s .", $3.code);
+                                                    $$.code = gen_code(temp);}
             ;
 
           
@@ -123,7 +123,7 @@ termino:        operando                            { $$ = $1 ; }
                                                     $$.code = gen_code (temp) ; }    
             ;
 
-operando:       IDENTIF                 { sprintf (temp, "%s", $1.code) ;
+operando:       IDENTIF                 { sprintf (temp, "%s @", $1.code) ;
                                         $$.code = gen_code (temp) ; }
             |   NUMBER                  { sprintf (temp, "%d", $1.value) ;
                                         $$.code = gen_code (temp) ; }
