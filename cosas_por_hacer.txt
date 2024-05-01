@@ -1,7 +1,6 @@
-- Mirar el error de la funcion factorial de malloc(): corrupted top size
-- Arreglar por qué no se pueden poner los operadores condicionales de un solo caracter
-- Hacer bien la traduccion de las sentencias condicionales
+frontend:
 
 
 backend:
--recursividad en variables globales
+- Mirar donde hay que implementar los operadores de pila (especialmente dup y drop)
+- Hacer funciones con 1 retorno y un parámetro de llamada???
