@@ -13,13 +13,12 @@ test_custom_function()
     vector[3] = 40;
     vector[4] = 50;
 
-    // Imprimiendo cada elemento del vector
-    printf("Elementos del vector: ");
-    for (int i = 0; i < 5; i++)
+    int i;
+    for (i = 0; i < 5; i=i+1)
     {
-        printf("%d ", vector[i]);
+        puts("en bucle");
     }
-    printf("\n");
+    return vector[2];
 }
 
 main()
@@ -28,3 +27,4 @@ main()
     test_custom_function();
 
 }
+//@ (main)

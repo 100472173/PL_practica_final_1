@@ -9,5 +9,6 @@ main()
     global_variable = 20;
     printf("Prueba de asignacion de variables globales: %d\n", global_variable);
 
-    return 0;
 }
+
+//@ (main)

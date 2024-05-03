@@ -5,17 +5,12 @@ test_multiple_ifs(int x)
 {
     if (x < 0)
     {
-        printf("El número es negativo\n");
+        puts("El número es negativo");
         return -1;
-    }
-    else if (x == 0)
-    {
-        printf("El número es cero\n");
-        return 0;
     }
     else
     {
-        printf("El número es positivo\n");
+        puts("El número es positivo");
         return 1;
     }
 }
@@ -24,6 +19,7 @@ main()
 {
     int num = 5;
     int result = test_multiple_ifs(num);
-    printf("Resultado de la prueba: %d\n", result);
+    printf("Resultado de la prueba: %d", result);
     return 0;
 }
+//@ (main)

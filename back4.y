@@ -104,11 +104,11 @@ cuerpo_funcion: sentencia cuerpo_funcion            {sprintf(temp, "%s\n%s", $1.
                                                     $$.code = gen_code (temp) ; }
                 ;
 
-sentencia:    SETQ IDENTIF expresion      { if (strcmp($3.code, "0") == 0) {
-                                                                              sprintf (temp, "variable %s\n", $2.code) ;
+sentencia:   '(' SETQ IDENTIF expresion ')'     { if (strcmp($4.code, "0") == 0) {
+                                                                              sprintf (temp, "variable %s\n", $3.code) ;
                                                                           }
                                                                           else {
-                                                                              sprintf (temp, "variable %s\n%s %s !\n", $2.code, $3.code, $2.code) ;
+                                                                              sprintf (temp, "variable %s\n%s %s !\n", $3.code, $4.code, $3.code) ;
                                                                           }
                                                                           $$.code = gen_code (temp) ; }
             | '(' SETF IDENTIF expresion ')'                                   {sprintf (temp, "%s %s !", $4.code, $3.code) ;

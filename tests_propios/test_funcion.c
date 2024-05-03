@@ -1,9 +1,9 @@
 #include <stdio.h>
-
+int resultado = 5 * 10;
 // Función personalizada sin parámetros y sin retorno
 test_custom_function()
 {
-    int resultado = 5 * 10; // Realizando un cálculo simple
+    
     printf("El resultado del cálculo es: %d\n", resultado);
 }
 
@@ -14,3 +14,4 @@ main()
 
     
 }
+//@ (main)

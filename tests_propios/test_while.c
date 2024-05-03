@@ -1,15 +1,16 @@
 #include <stdio.h>
-
+int i = 0;
 main()
 {
     // Loop while con expresiones lógicas
-    int i = 0;
+    
     while (i < 5)
     {
-        printf("%d ", i);
-        i++;
+        puts("bucle anidado");
+        i = i + 1;
     }
-    printf("\n");
+    
 
    
 }
+//@ (main)

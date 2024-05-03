@@ -85,13 +85,13 @@ decl_variables:      sentencia_variable ';' decl_variables    { sprintf (temp, "
 
 sentencia_variable:    INTEGER IDENTIF                                        { sprintf (temp, "(setq %s 0)", $2.code) ;
                                                                                 $$.code = gen_code (temp) ; }
-                     | INTEGER IDENTIF '=' NUMBER resto_sentencia_variable    { sprintf (temp, "(setq %s %d) %s", $2.code, $4.value, $5.code) ;
+                     | INTEGER IDENTIF '=' expresion resto_sentencia_variable    { sprintf (temp, "(setq %s %s) %s", $2.code, $4.code, $5.code) ;
                                                                                 $$.code = gen_code (temp) ; }
                      | INTEGER IDENTIF '[' expresion ']'                      { sprintf (temp, "(setq %s (make-array %s))", $2.code, $4.code) ;
                                                                                 $$.code = gen_code (temp) ; }
                      ;
 
-resto_sentencia_variable:     ',' IDENTIF '=' NUMBER resto_sentencia_variable            { sprintf (temp, "(setq %s %d) %s", $2.code, $4.value, $5.code) ;
+resto_sentencia_variable:     ',' IDENTIF '=' expresion resto_sentencia_variable            { sprintf (temp, "(setq %s %s) %s", $2.code, $4.code, $5.code) ;
                                                                                            $$.code = gen_code (temp) ; }
                                        |                                                 { strcpy(temp, "") ;
                                                                                            $$.code = gen_code (temp) ; }
@@ -233,16 +233,16 @@ var_local:    IDENTIF '=' expresion ';'                             { if (search
             |  INTEGER IDENTIF ';'                                  { add_string($2.code);
                                                                       sprintf (temp, "(setq FUNC_%s 0)", $2.code) ;
                                                                       $$.code = gen_code (temp) ; }
-            | INTEGER IDENTIF '=' NUMBER resto_var_local ';'        { add_string($2.code);
-                                                                      sprintf (temp, "(setq FUNC_%s %d) %s", $2.code, $4.value, $5.code) ;
+            | INTEGER IDENTIF '=' expresion resto_var_local ';'        { add_string($2.code);
+                                                                      sprintf (temp, "(setq FUNC_%s %s) %s", $2.code, $4.code, $5.code) ;
                                                                       $$.code = gen_code (temp) ; }
             | INTEGER IDENTIF '[' expresion ']' ';'                 { add_string($2.code);
                                                                       sprintf (temp, "(setq FUNC_%s (make-array %s))", $2.code, $4.code) ;
                                                                       $$.code = gen_code (temp) ; }
             ;
 
-resto_var_local:  ',' IDENTIF '=' NUMBER resto_var_local             { add_string($2.code) ;
-                                                                       sprintf (temp, "(setq FUNC_%s %d) %s", $2.code, $4.value, $5.code) ;
+resto_var_local:  ',' IDENTIF '=' expresion resto_var_local             { add_string($2.code) ;
+                                                                       sprintf (temp, "(setq FUNC_%s %s) %s", $2.code, $4.code, $5.code) ;
                                                                        $$.code = gen_code (temp) ; }
                  |                                                   { strcpy(temp, "") ;
                                                                        $$.code = gen_code (temp) ; }
