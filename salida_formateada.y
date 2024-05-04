@@ -24,7 +24,7 @@ void clear_array();
 
 char temp [2048] ;
 char locales [256][256];
-int tamaño_locales = 0;
+int tamanio_locales = 0;
 
 // Definitions for explicit attributes
 
@@ -382,7 +382,7 @@ char* replace_substring(char *string, char *sub_string) {
         p += len1;
     }
 
-    // Calcular el tamaño del nuevo string
+    // Calcular el tamanio del nuevo string
     size_t new_len = strlen(string) + (len2 - len1) * count;
     char *new_string = (char *)malloc(new_len + 1);
     if (new_string == NULL) {
@@ -407,7 +407,7 @@ char* replace_substring(char *string, char *sub_string) {
 }
 
 int search_string(char *elemento) {
-    for (int i = 0; i < tamaño_locales; i++) {
+    for (int i = 0; i < tamanio_locales; i++) {
         if (strcmp(locales[i], elemento) == 0) {
             return 1; // Se encontró el elemento en el array
         }
@@ -416,15 +416,15 @@ int search_string(char *elemento) {
 }
 
 void add_string(char *nuevaCadena) {
-    strcpy(locales[tamaño_locales], nuevaCadena);
-    tamaño_locales++; // Incrementa el número de filas
+    strcpy(locales[tamanio_locales], nuevaCadena);
+    tamanio_locales++; // Incrementa el número de filas
 }
 
 void clear_array() {
-    for (int i = 0; i < tamaño_locales; i++) {
+    for (int i = 0; i < tamanio_locales; i++) {
         locales[i][0] = '\0'; // Asigna una cadena vacía a cada elemento del array
     }
-    tamaño_locales = 0;
+    tamanio_locales = 0;
 }
 
 /***************************************************************************/
