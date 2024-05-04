@@ -30,7 +30,7 @@ typedef struct s_attr {
 
 // Definitions for explicit attributes
 
-%token NUMBER        
+%token NUMBER
 %token IDENTIF       // Identificador=variable
 %token INTEGER       // identifica el tipo entero
 %token STRING
@@ -60,7 +60,7 @@ typedef struct s_attr {
 
 %%                            // Seccion 3 Gramatica - Semantico
 
-axioma:       programa '(' MAIN ')'           { printf (" main\n") ; }
+axioma:       programa '(' MAIN ')'           { printf ("\n%smain\n\n", $1.code) ; }
                 r_expr                                { ; }
             ;
 
@@ -68,29 +68,30 @@ r_expr:                                  { ; }
             |   axioma                   { ; }
             ;
 
-programa:   '(' linea ')'                           {printf ("%s ", $2.code);}
-             programa                               { ; }
-          | '(' DEFUN MAIN '(' ')' cuerpo_funcion ')'     {printf (": main %s ;", $6.code) ;}
+programa:   '(' linea ')' programa                          {sprintf (temp, "%s\n%s", $2.code, $4.code);
+                                                           $$.code = gen_code(temp);}
+          | '(' DEFUN MAIN '(' ')' cuerpo_funcion ')'     {sprintf (temp, ": main %s ;\n", $6.code) ;
+                                                                            $$.code = gen_code (temp) ; }
 
 linea:   sentencia_variable     {$$ = $1;}
        | sentencia_funcion      {$$ = $1;}
 
 sentencia_variable:      SETQ IDENTIF expresion      { if (strcmp($3.code, "0") == 0) {
-                                                                sprintf (temp, "variable %s", $2.code) ;
+                                                                sprintf (temp, "variable %s\n", $2.code) ;
                                                             }
                                                             else {
-                                                                sprintf (temp, "variable %s %s %s !", $2.code, $3.code, $2.code) ;
+                                                                sprintf (temp, "variable %s\n%s %s !\n", $2.code, $3.code, $2.code) ;
                                                             }
                                                             $$.code = gen_code (temp) ; }
-                    |   SETF IDENTIF expresion      { sprintf (temp, "%s %s !", $3.code, $2.code) ;
+                    |   SETF IDENTIF expresion      { sprintf (temp, "%s %s !\n", $3.code, $2.code) ;
                                                             $$.code = gen_code (temp) ; }
 
                 ;
 
-sentencia_funcion: DEFUN IDENTIF '('  ')' cuerpo_funcion      {sprintf (temp, ": %s %s ;", $2.code, $5.code) ;
+sentencia_funcion: DEFUN IDENTIF '('  ')' cuerpo_funcion      {sprintf (temp, ": %s %s ;\n", $2.code, $5.code) ;
                                                                     $$.code = gen_code (temp) ; }
 
-cuerpo_funcion: sentencia cuerpo_funcion            {sprintf(temp, "%s %s", $1.code, $2.code);
+cuerpo_funcion: sentencia cuerpo_funcion            {sprintf(temp, "%s\n%s", $1.code, $2.code);
                                                     $$.code = gen_code(temp); }
                 |                                   { strcpy(temp, "") ;
                                                     $$.code = gen_code (temp) ; }
@@ -103,9 +104,9 @@ sentencia:
                                                                              $$.code = gen_code(temp);}
             |   '(' PRIN1 expresion_print ')'                                     { sprintf(temp, "%s", $3.code);
                                                                             $$.code = gen_code(temp);}
-            | '(' LOOP WHILE expresion_logica DO cuerpo_funcion ')'     {sprintf(temp, "BEGIN %s WHILE %s REPEAT", $4.code, $6.code);
+            | '(' LOOP WHILE expresion_logica DO cuerpo_funcion ')'     {sprintf(temp, "BEGIN\n\t%s\nWHILE\n\t%s\nREPEAT", $4.code, $6.code);
                                                                               $$.code = gen_code(temp);}
-            | '(' IF expresion_logica cuerpo_if ')'                     {sprintf(temp, "%s IF %s", $3.code, $4.code);
+            | '(' IF expresion_logica cuerpo_if ')'                     {sprintf(temp, "%s IF\n\t%s", $3.code, $4.code);
                                                                          $$.code = gen_code(temp);}
             | '(' IDENTIF ')'                                           {$$ = $2;}
             ;
@@ -116,17 +117,17 @@ expresion_print:    expresion {sprintf(temp, "%s .", $1.code);
                                $$.code = gen_code(temp);}
                   ;
 
-cuerpo_if:  '(' PROGN cuerpo_funcion ')' sentencia                              {sprintf(temp, "%s ELSE %s THEN", $3.code, $5.code);
+cuerpo_if:  '(' PROGN cuerpo_funcion ')' sentencia                              {sprintf(temp, "%s\nELSE\n\t%s\nTHEN", $3.code, $5.code);
                                                                                  $$.code = gen_code(temp); }
-           | sentencia sentencia                                                 {sprintf(temp, "%s ELSE %s THEN", $1.code, $2.code);
+           | sentencia sentencia                                                 {sprintf(temp, "%s\nELSE\n\t%s\nTHEN", $1.code, $2.code);
                                                                                  $$.code = gen_code(temp); }
-           | sentencia '(' PROGN cuerpo_funcion ')'                                  {sprintf(temp, "%s ELSE %s THEN", $1.code, $4.code);
+           | sentencia '(' PROGN cuerpo_funcion ')'                                  {sprintf(temp, "%s\nELSE\n\t%s\nTHEN", $1.code, $4.code);
                                                                                      $$.code = gen_code(temp); }
-           | '(' PROGN cuerpo_funcion ')' '(' PROGN cuerpo_funcion ')'           {sprintf(temp, "%s ELSE %s THEN", $3.code, $7.code);
+           | '(' PROGN cuerpo_funcion ')' '(' PROGN cuerpo_funcion ')'           {sprintf(temp, "%s\nELSE\n\t%s\nTHEN", $3.code, $7.code);
                                                                                  $$.code = gen_code(temp); }
-           | '(' PROGN cuerpo_funcion ')'                                       {sprintf(temp, "%s THEN", $3.code);
+           | '(' PROGN cuerpo_funcion ')'                                       {sprintf(temp, "%s\nTHEN", $3.code);
                                                                                   $$.code = gen_code(temp); }
-           | sentencia                                                          {sprintf(temp, "%s THEN", $1.code);
+           | sentencia                                                          {sprintf(temp, "%s\nTHEN", $1.code);
                                                                                    $$.code = gen_code(temp); }
            ;
 
@@ -180,7 +181,7 @@ expresion:      termino                             { $$ = $1 ; }
 
 termino:        operando                            { $$ = $1 ; }
             |   '-' operando %prec UNARY_SIGN       { sprintf (temp, "negate %s", $2.code) ;
-                                                    $$.code = gen_code (temp) ; }    
+                                                    $$.code = gen_code (temp) ; }
             ;
 
 operando:       IDENTIF                 { sprintf (temp, "%s @", $1.code) ;
@@ -300,7 +301,7 @@ t_keyword *search_keyword (char *symbol_name)
     return NULL ;
 }
 
- 
+
 /***************************************************************************/
 /******************* Seccion del Analizador Lexicografico ******************/
 /***************************************************************************/
@@ -309,11 +310,11 @@ char *gen_code (char *name)     // copia el argumento a un
 {                                      // string en memoria dinamica
     char *p ;
     int l ;
-	
+
     l = strlen (name)+1 ;
     p = (char *) my_malloc (l) ;
     strcpy (p, name) ;
-	
+
     return p ;
 }
 
@@ -354,7 +355,7 @@ int yylex ()
                 }
             }
         } else if (c == '\\') c = getchar () ;
-		
+
         if (c == '\n')
             n_line++ ;
 

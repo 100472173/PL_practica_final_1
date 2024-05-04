@@ -1,5 +1,5 @@
 /* Grupo de trabajo 03. Alejandro Díaz Cuéllar y Tomás Mendizábal*/
-/* 100472173@alumnos.uc3m.es 100461170@alumos.uc3m.es */
+/* 100472173@alumnos.uc3m.es 100461170@alumos.uc3m.es z*/
 
 %{                          // SECCION 1 Declaraciones de C-Yacc
 
@@ -69,7 +69,7 @@ typedef struct s_attr {
 
 %%                            // Seccion 3 Gramatica - Semantico
 
-axioma:       decl_variables def_funciones             { printf ("%s %s", $1.code, $2.code);}
+axioma:       decl_variables def_funciones             { ; }
               r_expr                                   { ; }
             ;
 
@@ -77,8 +77,8 @@ r_expr:        axioma                        { ; }
             |                                { ; }
             ;
 
-decl_variables:      sentencia_variable ';' decl_variables    { sprintf (temp, "%s %s", $1.code, $3.code) ;
-                                                                $$.code = gen_code (temp) ; }
+decl_variables:      sentencia_variable ';'     {printf ("%s", $1.code);}
+                     decl_variables             { ; }
                   |                                           { strcpy(temp, "") ;
                                                                 $$.code = gen_code (temp) ;}
                   ;
@@ -99,10 +99,10 @@ resto_sentencia_variable:     ',' IDENTIF '=' expresion resto_sentencia_variable
 
 def_funciones:      MAIN '(' argumentos ')' '{' cuerpo_funcion '}'     { char * new_code = replace_substring($6.code, "main") ;
                                                                          clear_array() ;
-                                                                         sprintf (temp, "(defun main (%s) %s)", $3.code, new_code) ;
-                                                                         $$.code = gen_code (temp) ; }
-                  | sentencia_funcion def_funciones                    { sprintf (temp, "%s %s", $1.code, $2.code) ;
-                                                                         $$.code = gen_code (temp) ;}
+                                                                         printf ("(defun main (%s) %s)", $3.code, new_code) ;
+                                                                          }
+                  | sentencia_funcion                                   {printf ("%s", $1.code) ; }
+                    def_funciones                                                   { ; }
                   ;
 
 sentencia_funcion:   IDENTIF '(' argumentos ')' '{' cuerpo_funcion '}'    { char * new_code = replace_substring($6.code, $1.code) ;
@@ -169,20 +169,19 @@ lista_printf:          expresion ',' lista_printf             { sprintf (temp, "
                                                                 $$.code = gen_code (temp) ; }
                     ;
 
-sentencias_if:    sentencia lista_sentencias              { if ((strcmp($2.code, "") == 0 && strstr($1.code, "prin1") == NULL)) {
-                                                                sprintf (temp, "%s", $1.code) ;
-                                                            }
-                                                            else {
-                                                                sprintf (temp, "(progn %s %s)", $1.code, $2.code) ;
-                                                            }
+sentencias_if:    sentencia lista_sentencias              { sprintf (temp, "(progn %s %s)", $1.code, $2.code) ;
                                                             $$.code = gen_code (temp) ; }
-               |  funcion_return lista_sentencias         { if (strcmp($2.code, "") == 0) {
-                                                                sprintf(temp, "(return-from FUNC %s)", $1.code) ;
-                                                            }
-                                                            else {
-                                                                sprintf(temp, "(progn (return-from FUNC %s) %s)", $1.code, $2.code) ;
-                                                            }
+               |  funcion_return lista_sentencias         { sprintf(temp, "(progn (return-from FUNC %s) %s)", $1.code, $2.code) ;
                                                             $$.code = gen_code (temp) ; }
+               | sentencia                                {if (strstr($1.code, "prin1") == NULL) {
+                                                              sprintf (temp, "%s", $1.code);
+                                                           }
+                                                           else {
+                                                                sprintf (temp, "(progn %s)", $1.code) ;
+                                                           }
+                                                           $$.code = gen_code (temp) ; }
+               |  funcion_return                          {sprintf(temp, "(return-from FUNC %s)", $1.code) ;
+                                                            $$.code = gen_code (temp) ;     }
                |                                          { strcpy(temp, "") ;
                                                             $$.code = gen_code (temp) ; }
                ;
@@ -191,8 +190,9 @@ lista_sentencias:     sentencia lista_sentencias          { sprintf (temp, "%s %
                                                             $$.code = gen_code (temp) ; }
                    |  funcion_return lista_sentencias     { sprintf(temp, "(return-from FUNC %s) %s", $1.code, $2.code) ;
                                                             $$.code = gen_code (temp) ; }
-                   |                                      { strcpy(temp, "") ;
-                                                            $$.code = gen_code (temp) ; }
+                   |  sentencia                           { $$ = $1; }
+                   |  funcion_return                      {sprintf(temp, "(return-from FUNC %s)", $1.code) ;
+                                                            $$.code = gen_code (temp) ;     }
                    ;
 
 parametros:   expresion resto_parametros        { sprintf(temp, "%s %s", $1.code, $2.code) ;
