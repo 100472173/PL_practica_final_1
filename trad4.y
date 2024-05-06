@@ -145,6 +145,8 @@ funcion_return:     RETURN expresion ';'        { sprintf(temp, "%s", $2.code) ;
 
 sentencia:        var_local                                                                                 { $$ = $1 ; }
                 | PRINTF '(' STRING ',' lista_printf ')' ';'                                                { $$ = $5 ; }
+                | PRINTF '(' STRING ')' ';'                                                                 { sprintf (temp, "(print \"%s\")", $3.code) ;
+                                                                                                              $$.code = gen_code (temp) ; }
                 | PUTS '(' STRING ')' ';'                                                                   { sprintf (temp, "(print \"%s\")", $3.code) ;
                                                                                                               $$.code = gen_code (temp) ; }
                 | WHILE '(' expr_logica ')' '{' lista_sentencias '}'                                        { sprintf (temp, "(loop while %s do %s)", $3.code, $6.code) ;
