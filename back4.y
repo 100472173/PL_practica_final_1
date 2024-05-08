@@ -1,4 +1,7 @@
-%{                          // SECCION 1 Declaraciones de C-Yacc
+/* Grupo de trabajo 03. Alejandro Díaz Cuéllar y Tomás Mendizábal*/
+/* 100472173@alumnos.uc3m.es 100461170@alumos.uc3m.es z*/
+
+// SECCION 1 Declaraciones de C-Yacc
 
 #include <stdio.h>
 #include <ctype.h>            // declaraciones para tolower
@@ -61,31 +64,26 @@ typedef struct s_attr {
 %%                            // Seccion 3 Gramatica - Semantico
 
 axioma:       programa '(' MAIN ')'           { printf (" main\n") ; }
-                r_expr                                { ; }
+                r_expr                        { ; }
             ;
 
-r_expr:                                  { ; }
-            |   axioma                   { ; }
+r_expr:                                       { ; }
+            |   axioma                        { ; }
             ;
 
-programa:   '(' linea ')'                           {printf ("%s ", $2.code);}
-             programa                               { ; }
-          | '(' DEFUN MAIN '(' ')' cuerpo_funcion ')'     {printf (": main %s ;", $6.code) ;}
+programa:   '(' linea ')'                                 { printf ("%s ", $2.code) ; }
+             programa                                     { ; }
+          | '(' DEFUN MAIN '(' ')' cuerpo_funcion ')'     { printf (": main %s ;", $6.code) ; }
 
-linea:   sentencia_variable     {$$ = $1;}
-       | sentencia_funcion      {$$ = $1;}
+linea:   sentencia_variable                                { $$ = $1 ; }
+       | sentencia_funcion                                 { $$ = $1 ; }
 
-sentencia_variable:      SETQ IDENTIF expresion      { if (strcmp($3.code, "0") == 0) {
-                                                                sprintf (temp, "variable %s", $2.code) ;
-                                                            }
-                                                            else {
-                                                                sprintf (temp, "variable %s %s %s !", $2.code, $3.code, $2.code) ;
-                                                            }
-                                                            $$.code = gen_code (temp) ; }
-                    |   SETF IDENTIF expresion      { sprintf (temp, "%s %s !", $3.code, $2.code) ;
-                                                            $$.code = gen_code (temp) ; }
+sentencia_variable:     SETQ IDENTIF expresion       { sprintf (temp, "variable %s %s %s !", $2.code, $3.code, $2.code) ;
+                                                       $$.code = gen_code (temp) ; }
+                    |   SETF IDENTIF expresion       { sprintf (temp, "%s %s !", $3.code, $2.code) ;
+                                                       $$.code = gen_code (temp) ; }
 
-                ;
+                    ;
 
 sentencia_funcion: DEFUN IDENTIF '('  ')' cuerpo_funcion      {sprintf (temp, ": %s %s ;", $2.code, $5.code) ;
                                                                     $$.code = gen_code (temp) ; }
