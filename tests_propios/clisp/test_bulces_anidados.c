@@ -13,7 +13,7 @@ test_custom_function()
     {
         for (j = 1; j <= i; j = j + 1)
         {
-            
+           puts("¡Adios!");
         }
         
     }

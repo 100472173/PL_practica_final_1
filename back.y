@@ -1,7 +1,7 @@
 /* Grupo de trabajo 03. Alejandro Díaz Cuéllar y Tomás Mendizábal*/
 /* 100472173@alumnos.uc3m.es 100461170@alumos.uc3m.es z*/
 
-// SECCION 1 Declaraciones de C-Yacc
+%{                          // SECCION 1 Declaraciones de C-Yacc
 
 #include <stdio.h>
 #include <ctype.h>            // declaraciones para tolower
@@ -63,7 +63,7 @@ typedef struct s_attr {
 
 %%                            // Seccion 3 Gramatica - Semantico
 
-axioma:       programa '(' MAIN ')'           { printf (" main\n") ; }
+axioma:       programa '(' MAIN ')'           { printf (" \nmain\n") ; }
                 r_expr                        { ; }
             ;
 

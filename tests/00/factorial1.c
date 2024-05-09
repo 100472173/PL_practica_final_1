@@ -17,5 +17,5 @@ main ()
 //    system ("pause") ;
 }
 
-//@ (main) 
-
+//@ (main)
+//@//@ bye
