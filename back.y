@@ -1,5 +1,5 @@
 /* Grupo de trabajo 03. Alejandro Díaz Cuéllar y Tomás Mendizábal*/
-/* 100472173@alumnos.uc3m.es 100461170@alumos.uc3m.es z*/
+/* 100472173@alumnos.uc3m.es 100461170@alumos.uc3m.es */
 
 %{                          // SECCION 1 Declaraciones de C-Yacc
 
@@ -74,10 +74,10 @@ r_expr:                                       { ; }
 programa:   '(' linea ')'                                 { printf ("%s ", $2.code) ; }
              programa                                     { ; }
           | '(' DEFUN MAIN '(' ')' cuerpo_funcion ')'     { printf (": main %s ;", $6.code) ; }
-
+        ;
 linea:    sentencia_variable                                { $$ = $1 ; }
         | sentencia_funcion                                 { $$ = $1 ; }
-
+        ;
 sentencia_variable:     SETQ IDENTIF expresion       { sprintf (temp, "variable %s %s %s !", $2.code, $3.code, $2.code) ;
                                                        $$.code = gen_code (temp) ; }
                     |   SETF IDENTIF expresion       { sprintf (temp, "%s %s !", $3.code, $2.code) ;
@@ -87,7 +87,7 @@ sentencia_variable:     SETQ IDENTIF expresion       { sprintf (temp, "variable 
 
 sentencia_funcion: DEFUN IDENTIF '('  ')' cuerpo_funcion      { sprintf (temp, ": %s %s ;", $2.code, $5.code) ;
                                                                 $$.code = gen_code (temp) ; }
-
+        ;
 cuerpo_funcion: sentencia cuerpo_funcion            { sprintf(temp, "%s %s", $1.code, $2.code);
                                                       $$.code = gen_code(temp); }
                 |                                   { strcpy(temp, "") ;
