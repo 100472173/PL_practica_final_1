@@ -1,5 +1,5 @@
 /* Grupo de trabajo 03. Alejandro Díaz Cuéllar y Tomás Mendizábal*/
-/* 100472173@alumnos.uc3m.es 100461170@alumos.uc3m.es z*/
+/* 100472173@alumnos.uc3m.es 100461170@alumos.uc3m.es */
 
 %{                          // SECCION 1 Declaraciones de C-Yacc
 
