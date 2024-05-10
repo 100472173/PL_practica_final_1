@@ -141,6 +141,7 @@ cuerpo_funcion:     sentencia cuerpo_funcion         { sprintf (temp, "%s %s", $
 
 funcion_return:     RETURN expresion ';'        { sprintf(temp, "%s", $2.code) ;
                                                   $$.code = gen_code (temp) ; }
+                ;
 
 sentencia:        var_local                                                                                 { $$ = $1 ; }
                 | PRINTF '(' STRING ',' lista_printf ')' ';'                                                { $$ = $5 ; }
